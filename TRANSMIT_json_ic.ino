@@ -378,6 +378,33 @@ root.printTo(packet);
     digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
 }
 
+
+
+
+/******************************************************** Downlink - Receive Code ********************/
+
+if (ev == EV_TXCOMPLETE) {
+    dataSent = true;
+   
+   if (LMIC.dataLen) {
+        // data received in rx slot after tx
+        Serial.print(F("Received "));
+        Serial.print(LMIC.dataLen);
+        Serial.print(F(" bytes of payload: 0x"));
+        for (int i = 0; i < LMIC.dataLen; i++) {
+          if (LMIC.frame[LMIC.dataBeg + i] < 0x10) {
+            Serial.print(F("0"));
+        }
+        Serial.print(LMIC.frame[LMIC.dataBeg + i], HEX);
+    }
+    Serial.println();
+/********************************************************** END *****************************************/
+
+
+
+
+
+
 // ----------------------------------------------------------------------------
 // LMIC CALLBACKS
 // ----------------------------------------------------------------------------
