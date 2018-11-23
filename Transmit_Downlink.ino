@@ -2,23 +2,19 @@
 #include <Arduino.h>
 #include <elapsedMillis.h>
 #include <avr/pgmspace.h>
+
 #include <lmic.h>
 #include <hal/hal.h>
+
 #include <SPI.h>
 #include "dtostrf.h"
-
 #include <delay.h>
-
-#include <CayenneLPP.h>//Used for compressing data packets in order to have a smaller Spreading Factor
 
 /**
  * How often should data be sent?
  */
 #define UpdateInterval 0.5     // Update Every 1 mins
 
-/***********************Cayenne*************************/
-CayenneLPP lpp(3);//Going to send ## byte packets
-/************************END***************************/
 
 // LoRaWAN Config
 // Device Address
@@ -57,8 +53,7 @@ void setup() {
     Serial.begin(115200);
 
     randomSeed(analogRead(0));
-    pinMode(13, OUTPUT);
-     
+    pinMode(13, OUTPUT);//LED
     delay(3000);
 
     // Debug message
@@ -143,33 +138,18 @@ void sendVRms() {
         return;
     }
 
-//Convert to a string
-    //char buffer[8];
-char packet[64];
+    char packet[64];
 
-//root["v"] = v;
-//root["i"] = i;
-//root["d"] = "03ff0002";
-//root.printTo(packet);  
-//char *addr = "03ff0002";
-
-lpp.reset();
-lpp.addDigitalInput(1,55);
-lpp.addDigitalInput(2,100);
-//lpp.addDigitalInput();
-
-//Copy the Cayenne buffer to our buffer
-lpp.copy(packet);
     // Put together the data to send
-//    char packet[20] = "{\"v\":";
-//    itoa(random(114, 126),buffer,10); //(integer, buffer, base)
-//    strcat(packet, buffer);
-//    strcat(packet, ", \"i\":");
-//    itoa(random(0, 10),buffer,10); //(integer, buffer, base)
-//    strcat(packet, buffer); 
-//    strcat(packet, ", \"d\":1");
-//    strcat(packet, deviceBuffer); // 0x03ff0001
-//    strcat(packet, "}");
+    char packet[20] = "{\"v\":";
+    itoa(random(114, 126),buffer,10); //(integer, buffer, base)
+    strcat(packet, buffer);
+    strcat(packet, ", \"i\":");
+    itoa(random(0, 10),buffer,10); //(integer, buffer, base)
+    strcat(packet, buffer); 
+    strcat(packet, ", \"d\":1");
+    strcat(packet, deviceBuffer); // 0x03ff0001
+    strcat(packet, "}");
 
     // Debug message.
     Serial.print("  seqno ");
@@ -196,6 +176,26 @@ lpp.copy(packet);
 
     digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
 }
+
+
+/******************************************************** Downlink - Receive Code ********************/
+
+if (ev == EV_TXCOMPLETE) {
+    dataSent = true;
+   
+   if (LMIC.dataLen) {
+        // data received in rx slot after tx
+        Serial.print(F("Received "));
+        Serial.print(LMIC.dataLen);
+        Serial.print(F(" bytes of payload: 0x"));
+        for (int i = 0; i < LMIC.dataLen; i++) {
+          if (LMIC.frame[LMIC.dataBeg + i] < 0x10) {
+            Serial.print(F("0"));
+        }
+        Serial.print(LMIC.frame[LMIC.dataBeg + i], HEX);
+    }
+    Serial.println();
+/********************************************************** END *****************************************/
 
 // ----------------------------------------------------------------------------
 // LMIC CALLBACKS
